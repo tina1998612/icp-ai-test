@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import useApi from "../hooks/useApi";
-import Loading from "./Loading";
-import { useEffect } from "react";
-import { login, logout } from "../utils/auth";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import useApi from "../hooks/useApi";
+import { login, logout } from "../utils/auth";
 import { getConversation } from "../utils/chat";
-import TextInput from "./TextInput";
 import { encryptData } from "../utils/encryptData";
+import Loading from "./Loading";
+import TextInput from "./TextInput";
 
 export default function Chat() {
   const [question, setQuestion] = useState("");
@@ -49,7 +48,7 @@ export default function Chat() {
   }, []);
 
   const onValidateOpenaiAPI = (e) => {
-    if (e.target.value.match(/^sk-[a-zA-Z0-9]{32,}$/)) {
+    if (e.target.value.match(/^sk-proj-[a-zA-Z0-9\-_]{32,}$/)) {
       setOpenaiKey(e.target.value);
     } else {
       setOpenaiKey("");
@@ -67,7 +66,7 @@ export default function Chat() {
   return (
     <div className="wrapper">
       <div className="wrapper-header">
-        <h1>Dai</h1>
+        <h1>AI Girlfriend Tina</h1>
         <button
           className="auth-button auth-button__hover"
           onClick={() => (window.auth.isAuthenticated ? logout() : login())}

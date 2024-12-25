@@ -6,7 +6,7 @@
   --dark: #1a1a1a;
   --light: #e6e6e6;
   --wrapper: 1000px;
-  --blue: #00b0ff;
+  --blue: #f8b1d4;
 }
 ::-webkit-scrollbar {
   display: none;
@@ -99,14 +99,14 @@ form {
   padding: 0.5rem 1rem;
   font-size: 1rem;
   color: white;
-  background-color: #0070f3;
+  background-color: #e57caa;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 .submit-button:hover {
-  background-color: #0051cc;
+  background-color: #e57caa;
 }
 .response-display {
   margin-top: 1rem;
@@ -283,7 +283,7 @@ form {
 }
 
 .auth-button {
-  background: #00b0ff;
+  background: #e57caa;
   cursor: pointer;
   color: #fff;
   border: none;
@@ -292,7 +292,7 @@ form {
 }
 
 .auth-button__hover:hover {
-  background: #0051cc;
+  background: #e57caa;
 }
 
 .wrapper-header {
