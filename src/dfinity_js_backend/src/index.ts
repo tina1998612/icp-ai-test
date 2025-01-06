@@ -1,39 +1,13 @@
-import { StableBTreeMap, Server } from "azle";
+import { Server } from "azle/experimental";
 import { v4 as uuidv4 } from "uuid";
 import { systemMessage } from "./utils/ai";
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 import cors from "cors";
+import { ConversationPayload } from "./dataType/dataType";
+import { userConversation } from "./storage/storage";
 
-/**
- * Message record
- */
-type Message = {
-  role: string;
-  content: string;
-  id: string;
-};
 
-type BaseMessage = {
-  role: string;
-  content: string;
-};
 
-type ConversationPayload = { userIdentity: string };
-
-type AddMessgeToConversationPayload = {
-  userIdentity: string;
-  conversationId: string;
-  message: BaseMessage;
-};
-
-type Conversation = {
-  id: string;
-  conversation: Message[];
-};
-
-type ErrorMessage = { message: string };
-
-const userConversation = StableBTreeMap<string, Conversation>(0);
 
 export default Server(() => {
   const app = express();
@@ -41,42 +15,52 @@ export default Server(() => {
   app.use(cors());
 
   app.put("/conversation", (req: Request, res: Response) => {
-    const conversationPayload = req.body as ConversationPayload;
-    if (!conversationPayload) {
-      return res.status(400).json({ message: "Invalid conversation payload" });
-    }
-
-    const message = { ...systemMessage, id: uuidv4() };
-    const conversation = { id: uuidv4(), conversation: [message] };
-    userConversation.insert(conversationPayload.userIdentity, conversation);
-
-    return res.status(200).json({
-      conversation,
-      id: conversation.id,
-      initiator: conversationPayload.userIdentity,
-    });
+      try{
+        const conversationPayload = req.body as ConversationPayload;
+        if (!conversationPayload) {
+          return res.status(400).json({ message: "Invalid conversation payload" });
+        }
+    
+    
+        const message = { ...systemMessage, id: uuidv4() };
+        const conversation = { id: uuidv4(), conversation: [message] };
+        userConversation.insert(conversationPayload.userIdentity, conversation);
+    
+        return res.status(200).json({
+          conversation,
+          id: conversation.id,
+          initiator: conversationPayload.userIdentity,
+        });
+      }catch(error: any) {
+         return res.status(500).json({message:`${error.message}`})
+      }
   });
 
   app.get("/conversation/:userIdentity", (req: Request, res: Response) => {
-    const userIdentity = req.params.userIdentity;
+    try{
+      const userIdentity = req.params.userIdentity;
     if (!userIdentity) {
       return res.status(404).json({ message: "User Identity is required" });
     }
 
     const conversation = userConversation.get(userIdentity);
-    if ("None" in conversation) {
+    if (!conversation) {
       return res
         .status(404)
         .json({ message: `No conversation found for ${userIdentity}` });
     }
 
-    return res.status(200).json(conversation.Some);
+    return res.status(200).json(conversation);
+    }catch(error: any) {
+      return res.status(500).json({message:`${error.message}`})
+    }
   });
 
-  app.post("/add/conversation", (req: Request, res: Response) => {
+  app.post("/add/conversation", (req:Request, res:Response) => {
+   try{
     const payload = req.body;
     const conversation = userConversation.get(payload.userIdentity);
-    if ("None" in conversation) {
+    if (!conversation) {
       return res.status(404).json({
         message: `No conversation found for ${payload.userIdentity}`,
       });
@@ -97,7 +81,7 @@ export default Server(() => {
       id: uuidv4(),
     };
 
-    const messages = conversation.Some.conversation;
+    const messages = conversation.conversation;
     const updatedMessages = [...messages, newMessage];
     const updatedConversation = {
       id: payload.conversationId,
@@ -106,14 +90,18 @@ export default Server(() => {
 
     userConversation.insert(payload.userIdentity, updatedConversation);
     return res.status(201).json(newMessage);
+   }catch(error: any) {
+    return res.status(500).json({message:`${error.message}`})
+   }
   });
 
-  app.delete("/conversation/:userIdentity", (req: Request, res: Response) => {
-    const userIdentity = req.params.userIdentity;
+  app.delete("/conversation/:userIdentity", (req: any, res: any) => {
+    try{
+      const userIdentity = req.params.userIdentity;
 
     const removedConversation = userConversation.remove(userIdentity);
 
-    if ("None" in removedConversation) {
+    if (!removedConversation) {
       return res.status(400).json({
         message: `Can not delete conversation with for user:${userIdentity}`,
       });
@@ -122,7 +110,13 @@ export default Server(() => {
     return res
       .status(201)
       .send(`The conversation associated to ${userIdentity} has been deleted`);
+    }catch(error: any){
+      return res.status(500).json({message:`${error.message}`})
+    }
   });
 
-  return app.listen();
+  const PORT = 3500
+  return app.listen(PORT,()=>{
+      console.log(`Server is running on port ${PORT}`)
+  })
 });
